@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, select, update
 from sqlalchemy.orm import Session
 from database.models import Employee
 
@@ -34,12 +34,15 @@ class AddNewEmployee(Resource):
     }
     """
     def post(self):
+
+        # Get and validate request data
         data = request.get_json()
         try:
             validate(data, schema_NewEmployee)
         except ValidationError as ex:
             return "Validation Error! " + str(ex.message), 500
 
+        # Insert new employee using ORM Session
         with Session(engine) as session:
             new = Employee(
                 registration = data['registration'],
@@ -66,7 +69,17 @@ class UpdateEmployeeData(Resource):
     def post(self):
         data = request.get_json()
 
-        return data, 201
+        # Build a dict with values to update
+        values = {}
+        for i in range(len(data['args'])):
+            values[data['args'][i]] = data['values'][i]
+        
+        # Create and execute query to update database with new values
+        with engine.connect() as conn:
+            stmt = update(Employee).where(Employee.registration == data['registration']).values(values)
+            conn.execute(stmt)
+
+        return "Data has been updated successfully!", 201
 
 class DeleteEmployee(Resource):
     """
@@ -95,8 +108,8 @@ class GetEmployee(Resource):
             stmt = select(Employee)
 
         # Execute Query
-        with engine.connect() as session:
-            for row in session.execute(stmt):
+        with engine.connect() as conn:
+            for row in conn.execute(stmt):
 
                 # Get data from database response
                 data = {
