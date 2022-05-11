@@ -1,6 +1,6 @@
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
-from sqlalchemy import create_engine, select, update
+from sqlalchemy import create_engine, select, update, delete
 from sqlalchemy.orm import Session
 from database.models import Employee
 
@@ -21,17 +21,18 @@ class HelloWorld(Resource):
 
 class AddNewEmployee(Resource):
     """
-    Receive information about new Employees.
-    data = {
-        "name" : string,
-        "surname" : string,
-        "registration" : int,
-        "role": string,
-        "leader" string,
-        "salary" : float,
-        "password" : string,
-        "status" : bool        
-    }
+    Receive information about new Employees and insert into the database.
+    JSON format:
+        data = {
+            "name" : string,
+            "surname" : string,
+            "registration" : int,
+            "role": string,
+            "leader" string,
+            "salary" : float,
+            "password" : string,
+            "status" : bool        
+        }
     """
     def post(self):
 
@@ -56,15 +57,18 @@ class AddNewEmployee(Resource):
             )
             session.add(new)
             session.commit()
+
         return "New registration successfully completed.", 201
 
 class UpdateEmployeeData(Resource):
     """
-    data = {
-        "registration" : id,
-        "args" : [],
-        "values" : []
-    }
+    Update one, or more, employees data.
+    JSON format:
+        data = {
+            "registration" : id,
+            "args" : [],
+            "values" : []
+        }
     """
     def post(self):
         data = request.get_json()
@@ -83,14 +87,15 @@ class UpdateEmployeeData(Resource):
 
 class DeleteEmployee(Resource):
     """
-    data = {
-        "registration" : int
-    }
+    Delete from the database a employee by its registration.
     """
-    def post(self):
-        data = request.get_json()
-        
-        return data, 201
+    def post(self, registration):
+
+        with engine.connect() as conn:
+            stmt = delete(Employee).where(Employee.registration == registration)
+            conn.execute(stmt)
+
+        return "Data has been deleted successfully!", 201
 
 class GetEmployee(Resource):
     """
@@ -129,7 +134,7 @@ class GetEmployee(Resource):
 api.add_resource(HelloWorld, '/')
 api.add_resource(AddNewEmployee, '/addNewEmployee')
 api.add_resource(UpdateEmployeeData, '/updateEmployeeData')
-api.add_resource(DeleteEmployee, '/deleteEmployee')
+api.add_resource(DeleteEmployee, '/deleteEmployee/<registration>')
 api.add_resource(GetEmployee, '/getEmployee', '/getEmployee/<registration>')
 
 
