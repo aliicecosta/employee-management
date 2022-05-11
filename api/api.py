@@ -4,6 +4,9 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 from database.models import Employee
 
+from utils import schema_NewEmployee
+from jsonschema import validate, ValidationError
+
 engine =  create_engine("postgresql://admin:root@postgres_container:5432/employees")
 
 app = Flask(__name__)
@@ -32,6 +35,11 @@ class AddNewEmployee(Resource):
     """
     def post(self):
         data = request.get_json()
+        try:
+            validate(data, schema_NewEmployee)
+        except ValidationError as ex:
+            return "Validation Error! " + str(ex.message), 500
+
         with Session(engine) as session:
             new = Employee(
                 registration = data['registration'],
@@ -89,7 +97,7 @@ class GetEmployee(Resource):
         # Execute Query
         with engine.connect() as session:
             for row in session.execute(stmt):
-                
+
                 # Get data from database response
                 data = {
                     "registration" : row[0],
