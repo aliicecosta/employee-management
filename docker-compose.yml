@@ -5,7 +5,34 @@ services:
     build:
       context: ./api
       dockerfile: Dockerfile
+    container_name: api_container
     ports:
       - "5000:5000"
     volumes:
       - ./api:/api
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres
+    container_name: postgres_container
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: employees
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d/
+
+  # pgadmin:
+  #   image: dpage/pgadmin4
+  #   container_name: pgadmin_container
+  #   environment:
+  #     PGADMIN_DEFAULT_EMAIL: admin@admin.com
+  #     PGADMIN_DEFAULT_PASSWORD: root
+  #   ports:
+  #     - "5550:80"
+  #   depends_on:
+  #     - postgres
