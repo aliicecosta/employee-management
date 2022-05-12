@@ -30,3 +30,21 @@ schema_NewEmployee = {
     },
     "additionalProperties": False
 }
+
+schema_UpdateEmployee = {
+    "required": [
+        "registration", "args", "values"
+    ],
+    "properties": {
+        "registration": {
+            "type" : "integer"
+        },
+        "args": {
+            "type": "array"
+        },
+        "values": {
+            "type": "array"
+        }
+    },
+    "additionalProperties": False
+}

@@ -1,10 +1,11 @@
+from logging import raiseExceptions
 from flask import Flask, request
 from flask_restful import Resource, Api, reqparse
-from sqlalchemy import create_engine, select, update, delete
+from sqlalchemy import create_engine, select, update, delete, exists
 from sqlalchemy.orm import Session
 from database.models import Employee
 
-from utils import schema_NewEmployee
+from utils import schema_NewEmployee, schema_UpdateEmployee
 from jsonschema import validate, ValidationError
 
 engine =  create_engine("postgresql://admin:root@postgres_container:5432/employees")
@@ -72,6 +73,13 @@ class UpdateEmployeeData(Resource):
     """
     def post(self):
         data = request.get_json()
+        try:
+            validate(data, schema_UpdateEmployee)
+            if not len(data['args']) == len(data['values']):
+                raise ValidationError("args and values must have the same len.")
+
+        except ValidationError as ex:
+            return "Validation Error! " + str(ex.message), 500
 
         # Build a dict with values to update
         values = {}
@@ -92,6 +100,7 @@ class DeleteEmployee(Resource):
     def post(self, registration):
 
         with engine.connect() as conn:
+            # Delete registry
             stmt = delete(Employee).where(Employee.registration == registration)
             conn.execute(stmt)
 
