@@ -16,9 +16,6 @@ api = Api(app)
 # Adds an argument to requests
 parser = reqparse.RequestParser()
 parser.add_argument('registration')
-class HelloWorld(Resource):
-    def get(self):
-        return {'hello': 'world'}
 
 class AddNewEmployee(Resource):
     """
@@ -140,7 +137,6 @@ class GetEmployee(Resource):
                 
         return employees, 200
 
-api.add_resource(HelloWorld, '/')
 api.add_resource(AddNewEmployee, '/addNewEmployee')
 api.add_resource(UpdateEmployeeData, '/updateEmployeeData')
 api.add_resource(DeleteEmployee, '/deleteEmployee/<registration>')
